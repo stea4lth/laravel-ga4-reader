@@ -1,0 +1,58 @@
+{
+    "name": "stea4lth/laravel-ga4-reader",
+    "description": "Read website traffic from the GA4 Data API in Laravel: cached reports, a negative-cached failure path, and a same-shape sample fallback for admin dashboards.",
+    "keywords": [
+        "laravel",
+        "google-analytics",
+        "ga4",
+        "analytics",
+        "dashboard"
+    ],
+    "homepage": "https://github.com/stea4lth/laravel-ga4-reader",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Flipvo LLC"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "google/analytics-data": "^0.24.0",
+        "illuminate/cache": "^12.0|^13.0",
+        "illuminate/contracts": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0|^11.0",
+        "pestphp/pest": "^3.8|^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Stea4lth\\Ga4Reader\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Stea4lth\\Ga4Reader\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Stea4lth\\Ga4Reader\\Ga4ReaderServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
