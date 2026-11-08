@@ -1,0 +1,57 @@
+{
+    "$schema": "https://json.schemastore.org/claude-code-settings.json",
+    "permissions": {
+        "allow": [
+            "Bash(composer install)",
+            "Bash(composer install:*)",
+            "Bash(composer test)",
+            "Bash(composer test:*)",
+            "Bash(composer lint)",
+            "Bash(composer format)",
+            "Bash(composer validate:*)",
+            "Bash(composer show:*)",
+            "Bash(composer outdated:*)",
+            "Bash(vendor/bin/pest:*)",
+            "Bash(vendor/bin/pint:*)",
+            "Bash(git status:*)",
+            "Bash(git diff:*)",
+            "Bash(git log:*)",
+            "Bash(git show:*)",
+            "Bash(git branch:*)",
+            "Bash(git switch:*)",
+            "Bash(git add:*)",
+            "Bash(git commit:*)",
+            "Bash(git archive:*)",
+            "Bash(git check-ignore:*)"
+        ],
+        "ask": [
+            "Bash(git push:*)",
+            "Bash(git tag:*)",
+            "Bash(gh release:*)",
+            "Bash(gh pr merge:*)",
+            "Bash(composer require:*)",
+            "Bash(composer remove:*)",
+            "Bash(composer update:*)"
+        ],
+        "deny": [
+            "Read(./.env)",
+            "Read(./.env.*)",
+            "Read(**/*service-account*.json)",
+            "Read(**/credentials.json)"
+        ]
+    },
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "php \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard.php\"",
+                        "timeout": 10
+                    }
+                ]
+            }
+        ]
+    }
+}
