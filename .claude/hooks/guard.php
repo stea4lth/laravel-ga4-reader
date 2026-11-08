@@ -157,23 +157,76 @@ function guard_check_git(array $args): ?string
     };
 }
 
+/** `git push` options whose value may be the next word (`--repo origin` as well as `--repo=origin`). */
+const PUSH_VALUE_OPTIONS = ['--repo', '--receive-pack', '--exec', '--push-option'];
+
+/** `git push` options that push every branch or tag, not named refspecs. */
+const PUSH_ALL_REFS_OPTIONS = ['--all', '--branches', '--tags', '--mirror'];
+
+/**
+ * Split `git push` arguments per git's option grammar: `--opt=value` and
+ * `--opt value` for value options, clustered short flags (`-fu`, `-oVALUE`,
+ * `-fo VALUE`), and `--` ending the options.
+ *
+ * @param  list<string>  $args
+ * @return array{force: bool, delete: bool, prune: bool, allRefs: bool, repoOption: bool, positional: list<string>}
+ */
+function guard_parse_push(array $args): array
+{
+    $parsed = ['force' => false, 'delete' => false, 'prune' => false, 'allRefs' => false, 'repoOption' => false, 'positional' => []];
+
+    for ($i = 0, $n = count($args); $i < $n; $i++) {
+        $arg = $args[$i];
+
+        if ($arg === '--') {
+            array_push($parsed['positional'], ...array_slice($args, $i + 1));
+            break;
+        }
+
+        if (str_starts_with($arg, '--')) {
+            $name = explode('=', $arg, 2)[0];
+            if (in_array($name, PUSH_VALUE_OPTIONS, true) && ! str_contains($arg, '=')) {
+                $i++; // the value is the next word
+            }
+            $parsed['repoOption'] = $parsed['repoOption'] || $name === '--repo';
+            $parsed['force'] = $parsed['force'] || in_array($name, ['--force', '--force-with-lease', '--mirror'], true);
+            $parsed['delete'] = $parsed['delete'] || $name === '--delete';
+            $parsed['prune'] = $parsed['prune'] || $name === '--prune';
+            $parsed['allRefs'] = $parsed['allRefs'] || in_array($name, PUSH_ALL_REFS_OPTIONS, true);
+
+            continue;
+        }
+
+        if (str_starts_with($arg, '-') && $arg !== '-') {
+            // A cluster of short flags; -o takes the rest of the cluster or the next word.
+            foreach (str_split(substr($arg, 1)) as $offset => $flag) {
+                if ($flag === 'o') {
+                    if ($offset === strlen($arg) - 2) {
+                        $i++;
+                    }
+                    break;
+                }
+                $parsed['force'] = $parsed['force'] || $flag === 'f';
+                $parsed['delete'] = $parsed['delete'] || $flag === 'd';
+            }
+
+            continue;
+        }
+
+        $parsed['positional'][] = $arg;
+    }
+
+    return $parsed;
+}
+
 /** @param list<string> $args */
 function guard_check_push(array $args): ?string
 {
-    $force = $delete = false;
-    $positional = [];
+    $push = guard_parse_push($args);
 
-    foreach ($args as $arg) {
-        if (in_array($arg, ['-f', '--force', '--mirror'], true) || str_starts_with($arg, '--force-with-lease')) {
-            $force = true;
-        } elseif (in_array($arg, ['-d', '--delete'], true)) {
-            $delete = true;
-        } elseif (! str_starts_with($arg, '-')) {
-            $positional[] = $arg;
-        }
-    }
-
-    $refspecs = array_slice($positional, 1); // the first one is the remote
+    // Git reads the first positional as the remote, even after --repo. With
+    // --repo set, a mistyped command can mean either, so check every positional.
+    $refspecs = $push['repoOption'] ? $push['positional'] : array_slice($push['positional'], 1);
 
     foreach ($refspecs as $refspec) {
         $plus = str_starts_with($refspec, '+');
@@ -183,16 +236,21 @@ function guard_check_push(array $args): ?string
         if (! guard_is_protected_ref($dest)) {
             continue;
         }
-        if ($delete || $colonDelete) {
+        if ($push['delete'] || $colonDelete) {
             return "deleting `{$dest}` on the remote is refused: it is the default branch or a published version.";
         }
-        if ($force || $plus) {
+        if ($push['force'] || $plus) {
             return "force-pushing `{$dest}` is refused: it rewrites the default branch or a published version. "
                 .'Push a new branch and open a pull request; for a bad release, tag a new patch version.';
         }
     }
 
-    if ($force && $refspecs === []) {
+    if (($push['force'] || $push['prune']) && $push['allRefs']) {
+        return 'a force push or prune of all branches or tags is refused: it can rewrite main or a published version. '
+            .'Push the one branch by name.';
+    }
+
+    if ($push['force'] && $refspecs === []) {
         return 'a force push with no explicit branch is refused (it may hit main). '
             .'Name the branch: `git push --force-with-lease origin my-branch`.';
     }

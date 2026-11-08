@@ -84,8 +84,9 @@ and a moved or deleted version tag: Composer users' lock files point at `v0.1.0`
 
 **Fix (in the PR):** `.claude/hooks/guard.php`, a PreToolUse hook that refuses force-pushes and deletes of `main`
 or a `vX.Y.Z` tag, `rm -rf` outside build output, staging secrets, and edits under `vendor/`. It ships with
-`tests/Tooling/GuardHookTest.php` (35 cases: each refusal next to an allowed neighbour). With the guard's
-decision disabled on purpose, 23 of the 35 fail; restored, all pass. `git push`, `git tag`, `gh release` and
+`tests/Tooling/GuardHookTest.php` (64 cases: each refusal next to an allowed neighbour, including
+`git push` option forms such as `--repo=origin`, `-o value`, `-fu` and `--`). With the guard's decision disabled
+on purpose, 44 of the 64 fail; restored, all pass. `git push`, `git tag`, `gh release` and
 `composer require/update/remove` are set to ask first.
 
 ### 6. No lint or format tool
@@ -139,8 +140,8 @@ temp file that each test deletes on its last line, so a failing assertion leaks 
 ## Test speed
 
 Whole suite: 18 tests, 61 assertions, 0.19 s. An agent can run all of it after every edit, which is the best
-case; nothing to fix. After the setup PR: 53 tests, 121 assertions, 1.29 s with coverage on. The hook tests add about a second,
-almost all of it starting 35 PHP processes.
+case; nothing to fix. After the setup PR's first commit: 53 tests, 121 assertions, 1.29 s with coverage on. The hook tests add about
+a second, almost all of it starting one PHP process per case; the hook file now has 64 cases.
 
 ## What the setup PR adds, and why
 
