@@ -39,12 +39,15 @@ producer passes its own new test and breaks a consumer's view.
 ### 2. The code that parses Google's response is never run by a test
 
 `grep -rnE 'setRows|new Row|DimensionValue|MetricValue' tests` → no matches. Every fake `runReport()` in the
-suite returns an empty `RunReportResponse`, so the loops that read rows never execute:
-`src/GoogleAnalyticsTraffic.php:233-237` (totals), `260-262` (daily series), `336-340` (panel totals) and
-`365-371` (top pages, sources, cities, devices, including the `(not set)` label). We swapped `$v[1]` and `$v[2]` on
-line 236 (sessions and page views) and ran the two test files that reach this code (`ReportShapeTest`,
-`CacheKeyTest`): 10 passed, 28 assertions. The bug went unnoticed; the change was then reverted. The coverage report in the PR body shows the
-same gap.
+suite returns an empty `RunReportResponse`, so the loops that read rows never execute.
+`pest --coverage` (PCOV) reports `GoogleAnalyticsTraffic` at 93.4%, and the uncovered lines are exactly the
+parsing: `src/GoogleAnalyticsTraffic.php:234-236` (report totals), `261` (daily series), `337-339` (panel
+totals), `366-370` (every ranked breakdown, including the `(not set)` label) and `397` (weekly series). A 91%
+total hides it: the lines no test covers are the ones that touch real data.
+
+To confirm, we swapped `$v[1]` and `$v[2]` on line 236 (sessions and page views) and ran the two test files
+that call `report()` (`ReportShapeTest`, `CacheKeyTest`): 10 passed, 28 assertions. The bug went unnoticed;
+the change was then reverted.
 
 **Fix:** a `readerWithRows()` test helper that answers each request with rows chosen by its dimension. It is
 written out in `.claude/skills/add-report-field/SKILL.md`; two example tests built on it were run against the
@@ -136,7 +139,8 @@ temp file that each test deletes on its last line, so a failing assertion leaks 
 ## Test speed
 
 Whole suite: 18 tests, 61 assertions, 0.19 s. An agent can run all of it after every edit, which is the best
-case; nothing to fix. The hook tests add about a second, almost all of it starting 35 PHP processes.
+case; nothing to fix. After the setup PR: 53 tests, 121 assertions, 1.29 s with coverage on. The hook tests add about a second,
+almost all of it starting 35 PHP processes.
 
 ## What the setup PR adds, and why
 
