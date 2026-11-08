@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Google\Analytics\Data\V1beta\RunReportRequest;
+use Google\Analytics\Data\V1beta\RunReportResponse;
 use Stea4lth\Ga4Reader\GoogleAnalyticsTraffic;
 use Stea4lth\Ga4Reader\SampleAnalytics;
 
@@ -27,9 +29,9 @@ it('gives the live report the same keys as the sample', function (): void {
     $ga = new class extends GoogleAnalyticsTraffic
     {
         protected function runReport(
-            Google\Analytics\Data\V1beta\RunReportRequest $request,
-        ): Google\Analytics\Data\V1beta\RunReportResponse {
-            return new Google\Analytics\Data\V1beta\RunReportResponse;
+            RunReportRequest $request,
+        ): RunReportResponse {
+            return new RunReportResponse;
         }
     };
 

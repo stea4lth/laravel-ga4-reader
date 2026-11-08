@@ -6,3 +6,9 @@ composer.lock
 .env.*
 .idea/
 .vscode/
+# GA4 service-account keys, wherever a local try-out drops them
+*service-account*.json
+credentials.json
+/storage/
+# Claude Code personal overrides
+.claude/settings.local.json
