@@ -53,12 +53,29 @@ it('labels an empty dimension value (not set)', function (): void {
 });
 
 it('places each GA day in its own 7-day report bucket', function (): void {
-    $report = readerWithRows(['date' => [['20261117', 4], ['20261111', 6], ['20261110', 9]]])->report(7);
+    $report = readerWithRows(['date' => [
+        ['20261117', 4], ['20261114', 7], ['20261113', 3], ['20261111', 6], ['20261110', 9],
+    ]])->report(7);
 
     // Daily buckets for 7 days: Nov 11 ... Nov 17. Nov 10 is outside the window.
-    expect($report['over_time'])->toHaveCount(7)
-        ->and($report['over_time'][0])->toBe(['label' => 'Nov 11', 'count' => 6])
-        ->and($report['over_time'][6])->toBe(['label' => 'Nov 17', 'count' => 4]);
+    expect($report['over_time'])->toBe([
+        ['label' => 'Nov 11', 'count' => 6],
+        ['label' => 'Nov 12', 'count' => 0],
+        ['label' => 'Nov 13', 'count' => 3],
+        ['label' => 'Nov 14', 'count' => 7],
+        ['label' => 'Nov 15', 'count' => 0],
+        ['label' => 'Nov 16', 'count' => 0],
+        ['label' => 'Nov 17', 'count' => 4],
+    ]);
+});
+
+it('sums GA days into 3-day buckets for a 30-day report', function (): void {
+    $report = readerWithRows(['date' => [['20261117', 4], ['20261116', 2], ['20261115', 1], ['20261114', 5]]])->report(30);
+
+    // Window Oct 19 ... Nov 17 in 3-day chunks: ... Nov 12-14, Nov 15-17.
+    expect($report['over_time'])->toHaveCount(10)
+        ->and($report['over_time'][8])->toBe(['label' => 'Nov 12', 'count' => 5])
+        ->and($report['over_time'][9])->toBe(['label' => 'Nov 15', 'count' => 7]);
 });
 
 it('asks GA for the window the report names', function (): void {
