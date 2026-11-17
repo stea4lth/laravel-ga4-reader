@@ -61,7 +61,7 @@ function readerWithRows(array $byDimension): GoogleAnalyticsTraffic
 
             return (new RunReportResponse)->setRows(array_map(
                 fn (array $r): Row => $name === 'totals'
-                    ? (new Row)->setMetricValues(array_map(fn ($v) => (new MetricValue)->setValue((string) $v), $r))
+                    ? (new Row)->setMetricValues(array_map(fn ($v) => (new MetricValue)->setValue((string) $v), array_slice($r, 0, count($request->getMetrics()))))
                     : (new Row)
                         ->setDimensionValues([(new DimensionValue)->setValue((string) $r[0])])
                         ->setMetricValues([(new MetricValue)->setValue((string) $r[1])]),

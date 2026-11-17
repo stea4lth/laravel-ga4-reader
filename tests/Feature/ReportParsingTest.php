@@ -88,11 +88,12 @@ it('asks GA for the window the report names', function (): void {
 });
 
 it('reads the panel totals in the order visitors, page views', function (): void {
-    $traffic = readerWithRows(['totals' => [[101, 0, 202]]])->traffic();
+    // The helper answers with as many values as the request has metrics, so a
+    // request that drops a metric leaves page_views_30d missing and fails here.
+    $traffic = readerWithRows(['totals' => [[101, 202, 303]]])->traffic();
 
-    // The panel asks for two metrics, so only the first two values exist in a real response.
     expect($traffic['visitors_30d'])->toBe(101)
-        ->and($traffic['page_views_30d'])->toBe(0);
+        ->and($traffic['page_views_30d'])->toBe(202);
 });
 
 it('reads the panel breakdowns and the weekly series', function (): void {
