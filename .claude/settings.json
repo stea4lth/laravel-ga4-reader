@@ -24,15 +24,6 @@
             "Bash(git archive:*)",
             "Bash(git check-ignore:*)"
         ],
-        "ask": [
-            "Bash(git push:*)",
-            "Bash(git tag:*)",
-            "Bash(gh release:*)",
-            "Bash(gh pr merge:*)",
-            "Bash(composer require:*)",
-            "Bash(composer remove:*)",
-            "Bash(composer update:*)"
-        ],
         "deny": [
             "Read(./.env)",
             "Read(./.env.*)",
